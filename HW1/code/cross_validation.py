@@ -1,40 +1,37 @@
-# This file contains functions for cross validation
 import numpy as np
 from math import ceil
 
 
-def n_fold_cv(X, y, Classifier_, n_fold, n_rep):
-    print("Running", n_fold, "fold cross validation with", n_rep, "replicates for", Classifier_.__name__)
-    n_obs = y.size
-    train_error_mat = np.zeros((n_rep, n_fold))
-    test_error_mat = np.zeros((n_rep, n_fold))
-    index = np.arange(n_obs)
-    for rep in range(0, n_rep):
-        print("Runnnig replicate No.", rep, end="\r")
+def n_fold_cross_val(X, y, classifier_, number_folds, number_splits):
+    assert X.shape[0] == y.size
+    print(number_folds, "fold cross validation with", number_splits, "splits for", classifier_.__name__)
+    number_observations = y.size
+    train_error_mat = np.zeros((number_splits, number_folds))
+    test_error_mat = np.zeros((number_splits, number_folds))
+    index = np.arange(number_observations)
+    for rep in range(0, number_splits):
         np.random.shuffle(index)
         index = index[np.argsort(y[index], kind='mergesort')]
-        for fold in range(0, n_fold):
-            train_index = np.remainder(index, n_fold) != fold
-            test_index = np.remainder(index, n_fold) == fold
+        for fold in range(0, number_folds):
+            train_index = np.remainder(index, number_folds) != fold
+            test_index = np.remainder(index, number_folds) == fold
             X_train = X[train_index, :]
             y_train = y[train_index]
             X_test = X[test_index, :]
             y_test = y[test_index]
-            model = Classifier_(X_train, y_train)
+            model = classifier_(X_train, y_train)
             train_error_mat[rep, fold] = model.validate(X_train, y_train)
             test_error_mat[rep, fold] = model.validate(X_test, y_test)
-    print("Cross Validation Complete")
-    return (test_error_mat, train_error_mat)
+    print("cross validation finished")
+    return test_error_mat, train_error_mat
 
 
-def fancy_cv(X, y, Classifier_, n_rep, train_percent):
-    print("Running validation for training percent", train_percent)
-    print("with", n_rep, "random 80-20 train-test splits", "for", Classifier_.__name__)
-    # train_error_mat = np.zeros((n_rep, train_percent.size))
-    test_error_mat = np.zeros((n_rep, train_percent.size))
-    for rep in range(0, n_rep):
-        print("Split No.", rep, end="\r")
-        # here split the whole set as 80% train 20% test
+def percents_validation(X, y, Classifier_, number_splits, train_percent):
+    print("percent validation with training percent", train_percent)
+    print("with", number_splits, "random 80-20 train-test splits", "for", Classifier_.__name__)
+    test_error_mat = np.zeros((number_splits, train_percent.size))
+    for rep in range(0, number_splits):
+        # split 80% as training and 20% as test
         train_index, test_index = train_test_index(y, .8)
         X_train = X[train_index, :]
         y_train = y[train_index]
@@ -46,15 +43,16 @@ def fancy_cv(X, y, Classifier_, n_rep, train_percent):
             X_train_sub = X_train[train_sub_index, :]
             y_train_sub = y_train[train_sub_index]
             model = Classifier_(X_train_sub, y_train_sub)
-            # train_error_mat[rep, p] = model.validate(X_train_sub, y_train_sub)
-            test_error_mat[rep, p] = model.validate(X_test, y_test)
-    print("Validation Complete")
+            test_error = model.validate(X_test, y_test)
+            test_error_mat[rep, p] = test_error
+            print('{}% percents no.{} split, test error {}'.format(train_percent[p], rep, test_error))
+    print("percents validation finished")
     return test_error_mat
 
 
 def train_test_index(y, train_percent):
-    num_obs = y.size
-    y_index = np.arange(num_obs)
+    number_observations = y.size
+    y_index = np.arange(number_observations)
     y_vals = np.unique(y)
     train_index = np.array([], dtype=int)
     for k in range(0, y_vals.size):
@@ -63,4 +61,4 @@ def train_test_index(y, train_percent):
         train_index_k = np.random.choice(y_sub_index, num_train_k, replace=False)
         train_index = np.concatenate((train_index, train_index_k))
     test_index = np.setdiff1d(y_index, train_index, assume_unique=True)
-    return (train_index, test_index)
+    return train_index, test_index

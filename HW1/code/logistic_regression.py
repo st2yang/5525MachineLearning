@@ -21,7 +21,7 @@ class LogisticRegression (Classifier):
         T = np.zeros((self.number_observations, self.number_classes))
         Y = np.zeros((self.number_observations, self.number_classes))
         # through iterations
-        number_iterations = 30
+        number_iterations = 20
         loss_record = np.zeros(number_iterations)
         for iter in range(number_iterations):
             W_mat = self.W_vector2matrix(W)
@@ -58,6 +58,9 @@ class LogisticRegression (Classifier):
                 # why it's not symmetric
                 dot_vec = Y[:, k] * (i_kj - Y[:, j])
                 block_kj = np.matmul(np.matmul(X.T, np.diag(dot_vec)), X)
+                # block_kj = np.zeros((self.number_features, self.number_features))
+                # for n in range(X.shape[0]):
+                #     block_kj += Y[n, k] * (i_kj - Y[n, j]) * np.outer(X[n, :], X[n, :])
                 hess_mat[j * self.number_features : (j + 1) * self.number_features, \
                 k * self.number_features : (k + 1) * self.number_features] = block_kj
         return hess_mat
