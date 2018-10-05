@@ -29,10 +29,10 @@ def _naiveBayesGaussian(data, number_splits=10, train_percent=np.array([10, 25, 
     return test_error_mean, test_error_std
 
 
-def NgJordanExperiment(data, dataset_name, train_percent=np.array([10, 25, 50, 75, 100])):
+def NgJordanExperiments(data, dataset_name, number_splits=10, train_percent=np.array([10, 25, 50, 75, 100])):
     # the first column of the data is the target
-    lr_error_mean, lr_error_std = _logisticRegression(data)
-    nb_error_mean, nb_error_std = _naiveBayesGaussian(data)
+    lr_error_mean, lr_error_std = _logisticRegression(data, number_splits, train_percent)
+    nb_error_mean, nb_error_std = _naiveBayesGaussian(data, number_splits, train_percent)
 
     plt.xlim([9.0, 101])
     plt.ylim([0.0, 0.3])
@@ -50,7 +50,7 @@ def main():
     # digits data
     digits = load_digits()
     digits_input = np.c_[digits.target, digits.data]
-    NgJordanExperiment(digits_input, 'digits')
+    NgJordanExperiments(digits_input, 'digits')
     # HomeVal50 data
     boston = load_boston()
     boston_y = boston.target
@@ -60,7 +60,7 @@ def main():
     for i in range(number_observations):
         HomeVal50[i] = boston_y[i] >= y_med
     HomeVal50_input = np.c_[HomeVal50, boston.data]
-    NgJordanExperiment(HomeVal50_input, 'HomeVal50')
+    NgJordanExperiments(HomeVal50_input, 'HomeVal50')
 
 
 if __name__ == '__main__':

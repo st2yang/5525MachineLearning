@@ -10,7 +10,9 @@ from cross_validation import n_fold_cross_val
 from LDA2d_GaussGM import LDA2dGaussGM
 
 
-def _LDA1dProjection(X, y):
+def _LDA1dProjection(data):
+    X = data[:, 1:]
+    y = data[:, 0].astype(int)
     number_observations = y.size
     # process the data
     y_med = np.median(y)
@@ -36,8 +38,10 @@ def _LDA1dProjection(X, y):
     plt.show()
 
 
-def _LDA2dGaussGM(X, y):
-    test_error_mat, train_error_mat = n_fold_cross_val(X, y, LDA2dGaussGM, 10, 10)
+def _LDA2dGaussGM(data, num_cross_val=10):
+    X = data[:, 1:]
+    y = data[:, 0].astype(int)
+    test_error_mat, train_error_mat = n_fold_cross_val(X, y, LDA2dGaussGM, num_cross_val, 10)
     train_error = np.mean(train_error_mat, axis=0)
     test_error_mean = np.mean(test_error_mat, axis=0)
     test_error_std = np.std(test_error_mat, axis=0, ddof=1)
@@ -48,10 +52,12 @@ def _LDA2dGaussGM(X, y):
 def main():
     # question 3a
     boston = load_boston()
-    _LDA1dProjection(boston.data, boston.target)
+    boston_input = np.c_[boston.target, boston.data]
+    _LDA1dProjection(boston_input)
     # question 3c
     digits = load_digits()
-    _LDA2dGaussGM(digits.data, digits.target)
+    digits_input = np.c_[digits.target, digits.data]
+    _LDA2dGaussGM(digits_input)
 
 
 if __name__ == '__main__':
