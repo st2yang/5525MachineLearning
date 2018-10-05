@@ -27,8 +27,8 @@ def _LDA1dProjection(X, y):
     w = np.dot(np.linalg.inv(S_w), (mean_class1 - mean_class0))
     # projection and plot
     X_projected = np.matmul(X, w)
-    plt.hist(X_projected[HomeVal50 == 1], label='class1')
-    plt.hist(X_projected[HomeVal50 == 0], label='class0')
+    plt.hist(X_projected[HomeVal50 == 1], label='class1', bins=100)
+    plt.hist(X_projected[HomeVal50 == 0], label='class0', bins=100)
     plt.legend()
     plt.ylabel('number of projected points')
     plt.xlabel('projected x value')

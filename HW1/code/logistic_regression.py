@@ -96,9 +96,9 @@ class LogisticRegression (Classifier):
 
 
 ##### test
-from sklearn.datasets import load_digits
-digits = load_digits()
-X = digits.data
-y = digits.target
-model = LogisticRegression(X, y)
-print(model.validate(X, y))
+# from sklearn.datasets import load_digits
+# digits = load_digits()
+# X = digits.data
+# y = digits.target
+# model = LogisticRegression(X, y)
+# print(model.validate(X, y))
