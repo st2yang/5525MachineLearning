@@ -46,6 +46,7 @@ def NgJordanExperiment(data, dataset_name, train_percent=np.array([10, 25, 50, 7
 
 
 def main():
+    np.random.seed(0)
     # digits data
     digits = load_digits()
     digits_input = np.c_[digits.target, digits.data]

@@ -21,7 +21,9 @@ def n_fold_cross_val(X, y, classifier_, number_folds, number_splits):
             y_test = y[test_index]
             model = classifier_(X_train, y_train)
             train_error_mat[rep, fold] = model.validate(X_train, y_train)
-            test_error_mat[rep, fold] = model.validate(X_test, y_test)
+            test_error = model.validate(X_test, y_test)
+            test_error_mat[rep, fold] = test_error
+            print('no.{} fold no.{} split, test error {}'.format(fold, rep, test_error))
     print("cross validation finished")
     return test_error_mat, train_error_mat
 

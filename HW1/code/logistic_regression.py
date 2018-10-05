@@ -21,7 +21,7 @@ class LogisticRegression (Classifier):
         T = np.zeros((self.number_observations, self.number_classes))
         Y = np.zeros((self.number_observations, self.number_classes))
         # through iterations
-        number_iterations = 20
+        number_iterations = 30
         loss_record = np.zeros(number_iterations)
         for iter in range(number_iterations):
             W_mat = self.W_vector2matrix(W)
@@ -30,10 +30,9 @@ class LogisticRegression (Classifier):
                 Y[i, :] = LogisticRegression.softmax(W_mat, X[i, :])
             loss_record[iter] = LogisticRegression.cross_entropy_loss(Y, T)
             grad_W = self.compute_gradient(X, Y, T)
-            # hessian is not working
-            # hess_W = self.compute_hessian(X, Y)
-            # W += - 0.01 * np.matmul(np.linalg.inv(hess_W), grad_W)
-            W += - 0.01 * grad_W
+            hess_W = self.compute_hessian(X, Y)
+            W += - 0.01 * np.matmul(np.linalg.inv(hess_W), grad_W)
+            # W += - 0.01 * grad_W
         return self.W_vector2matrix(W)
 
     def compute_gradient(self, X, Y, T):
@@ -54,15 +53,13 @@ class LogisticRegression (Classifier):
         hess_mat = np.zeros((self.number_classes * self.number_features, self.number_classes * self.number_features))
         for j in range(self.number_classes):
             for k in range(self.number_classes):
-                i_kj = 0 if (k == j) else 1
-                # why it's not symmetric
+                i_kj = 1 if (k == j) else 0
                 dot_vec = Y[:, k] * (i_kj - Y[:, j])
                 block_kj = np.matmul(np.matmul(X.T, np.diag(dot_vec)), X)
-                # block_kj = np.zeros((self.number_features, self.number_features))
-                # for n in range(X.shape[0]):
-                #     block_kj += Y[n, k] * (i_kj - Y[n, j]) * np.outer(X[n, :], X[n, :])
                 hess_mat[j * self.number_features : (j + 1) * self.number_features, \
                 k * self.number_features : (k + 1) * self.number_features] = block_kj
+        # hessian may not be PSD due to numerical issue
+        hess_mat = hess_mat + 0.1 * np.identity(self.number_classes * self.number_features)
         return hess_mat
 
     def W_vector2matrix(self, W_vec):
@@ -99,9 +96,9 @@ class LogisticRegression (Classifier):
 
 
 ##### test
-# from sklearn.datasets import load_digits
-# digits = load_digits()
-# X = digits.data
-# y = digits.target
-# model = LogisticRegression(X, y)
-# print(model.validate(X, y))
+from sklearn.datasets import load_digits
+digits = load_digits()
+X = digits.data
+y = digits.target
+model = LogisticRegression(X, y)
+print(model.validate(X, y))
