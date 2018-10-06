@@ -12,7 +12,8 @@ from LDA2d_GaussGM import LDA2dGaussGM
 
 def _LDA1dProjection(data):
     X = data[:, 1:]
-    y = data[:, 0].astype(int)
+    # y is not classification label here
+    y = data[:, 0]
     number_observations = y.size
     # process the data
     y_med = np.median(y)

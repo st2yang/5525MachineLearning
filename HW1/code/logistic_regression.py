@@ -3,7 +3,8 @@ from math import log
 from classifier import Classifier
 from data_preprocessor import DataPreprocessor
 
-class LogisticRegression (Classifier):
+
+class LogisticRegression(Classifier):
     def __init__(self, X, y):
         # Data_Preprocessor will copy X
         self.data_preprocessor = DataPreprocessor(X)
