@@ -13,10 +13,10 @@ class SVMCVX(Classifier):
         self.all_classes = np.unique(y)
         assert self.all_classes.size == 2
         y[y == self.all_classes[0]] = 1
-        y[y == self.all_classes[-1]] = -1
+        y[y == self.all_classes[1]] = -1
         self.number_features = X.shape[1]
         alpha = self.solve_dual_problem(X, y, regulator)
-        self.svm_weight = SVMCVX.compute_svm_weight(alpha, X, y)
+        self.svm_weight, self.svm_bias = SVMCVX.compute_svm_parameters(alpha, X, y, regulator)
 
     def solve_dual_problem(self, X, y, c):
         # QP problem
@@ -37,8 +37,17 @@ class SVMCVX(Classifier):
         alpha = np.array(solution['x'])
         return alpha.reshape((-1,))
 
-    def compute_svm_weight(alpha, X, y):
-        return (alpha * y).dot(X)
+    def compute_svm_parameters(alpha, X, y, c):
+        w = (alpha * y).dot(X)
+        b = 0
+        count = 0
+        for i in range(alpha.shape[0]):
+            if 0 < alpha[i] < c:
+                count += 1
+                b += y[i] - w.dot(X[i, :])
+        assert count > 0
+        b /= count
+        return w, b
 
     def validate(self, X_test, y_test):
         X_test = self.data_preprocessor.process_data(X_test)
@@ -59,7 +68,7 @@ class SVMCVX(Classifier):
     def predict_score(self, X):
         N = X.shape[0]
         svm_score = np.zeros((N, 2))
-        svm_score[:, 0] = X.dot(self.svm_weight)
+        svm_score[:, 0] = X.dot(self.svm_weight) + self.svm_bias
         svm_score[:, 1] = -svm_score[:, 0]
         return svm_score
 

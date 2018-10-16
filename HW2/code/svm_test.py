@@ -1,28 +1,26 @@
-from numpy import *
 from plotBoundary import *
+from svm_cvx import SVMCVX
 # import your SVM training code
 
-# parameters
-name = 'ls'
-print '======Training======'
+print('======Training======')
 # load data from csv files
-train = loadtxt('data/data_'+name+'_train.csv')
+train = loadtxt('../data/MNIST-13.csv', delimiter=',')
 # use deep copy here to make cvxopt happy
-X = train[:, 0:2].copy()
-Y = train[:, 2:3].copy()
+X = train[:, 1:].copy()
+y = train[:, 0].copy()
 
 # Carry out training, primal and/or dual
 
 # Define the predictSVM(x) function, which uses trained parameters
 
 # plot training results
-plotDecisionBoundary(X, Y, predictSVM, [-1, 0, 1], title = 'SVM Train')
+plotDecisionBoundary(X, y, None, [-1, 0, 1], title='SVM Train')
 
 
-print '======Validation======'
+print('======Validation======')
 # load data from csv files
-validate = loadtxt('data/data_'+name+'_validate.csv')
-X = validate[:, 0:2]
-Y = validate[:, 2:3]
+validate = loadtxt('../data/MNIST-13.csv', delimiter=',')
+X = train[:, 1:].copy()
+y = train[:, 0].copy()
 # plot validation results
-plotDecisionBoundary(X, Y, predictSVM, [-1, 0, 1], title = 'SVM Validate')
+plotDecisionBoundary(X, y, None, [-1, 0, 1], title='SVM Validate')
