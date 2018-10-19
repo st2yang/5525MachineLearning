@@ -5,6 +5,9 @@ from numpy import genfromtxt
 from cvxopt import matrix
 from cvxopt.solvers import qp
 
+# training error rate 0.003
+
+
 class SVMCVX(Classifier):
     def __init__(self, X, y, regulator):
         self.data_preprocessor = DataPreprocessor(X)
@@ -12,8 +15,9 @@ class SVMCVX(Classifier):
         y = np.copy(y).astype(int)
         self.all_classes = np.unique(y)
         assert self.all_classes.size == 2
-        y[y == self.all_classes[0]] = 1
-        y[y == self.all_classes[1]] = -1
+        self.target_value = np.array([1, -1]).astype(int)
+        y[y == self.all_classes[0]] = self.target_value[0]
+        y[y == self.all_classes[1]] = self.target_value[1]
         self.number_features = X.shape[1]
         alpha = self.solve_dual_problem(X, y, regulator)
         self.svm_weight, self.svm_bias = SVMCVX.compute_svm_parameters(alpha, X, y, regulator)
