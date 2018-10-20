@@ -1,4 +1,4 @@
-import numpy as np
+# Classifier class template
 
 
 class Classifier:

@@ -1,15 +1,12 @@
 import numpy as np
 from classifier import Classifier
 from data_preprocessor import DataPreprocessor
-from numpy import genfromtxt
-
-# training error rate 0.013, just acceptable, to tune the parameters
+from math import floor
 
 
 class SVMSoftplus(Classifier):
-    def __init__(self, X, y, sgd_batch_percent):
-        # hardcode a which should be very small
-        self.softplus_a = 0.01
+    def __init__(self, X, y, sgd_batch_size):
+        self.softplus_a = 0.1
         self.data_preprocessor = DataPreprocessor(X)
         X = self.data_preprocessor.process_data(X)
         y = np.copy(y).astype(int)
@@ -18,43 +15,54 @@ class SVMSoftplus(Classifier):
         self.target_value = np.array([1, -1]).astype(int)
         y[y == self.all_classes[0]] = self.target_value[0]
         y[y == self.all_classes[1]] = self.target_value[1]
-        self.number_features = X.shape[1]
+        n, self.number_features = X.shape
+        assert sgd_batch_size <= n
         # prepare for optimization
         self.loss_record = []
         penalty_lambda = 1
         w_init = np.random.normal(0, 0.001, self.number_features)
-        self.svm_weight = self.optimization(X, y, penalty_lambda, w_init, sgd_batch_percent)
+        self.svm_weight = self.optimization(X, y, penalty_lambda, w_init, sgd_batch_size)
 
     def optimization(self, X, y, lambda_, w0, k):
+        X_train, y_train, number_samples = self.group_train_data(X, y, k)
+        # optimization hyperparameters
+        max_iterations = 1000
+        learning_rate = 0.01
+        max_ktot = 10 * X.shape[0]
+        ktot = 0
+        for i in range(max_iterations):
+            ktot += k
+            self.loss_record.append(self.compute_loss(X, y, lambda_, w0))
+            X_batch, y_batch = self.select_batch(X_train, y_train, number_samples)
+            grad_w = self.compute_gradient(X_batch, y_batch, lambda_, w0)
+            w1 = w0 - learning_rate * grad_w
+            w0 = w1
+            if ktot >= max_ktot:
+                break
+        return w0
+
+    def group_train_data(self, X, y, k):
         X_train = {}
         y_train = {}
         for one_class in self.target_value:
             index = y == one_class
             X_train[one_class] = X[index]
             y_train[one_class] = y[index]
-        # optimization hyperparameters
-        max_iterations = 1000
-        learning_rate = 0.01
-        stopping_epsilon = 1e-6
-        for i in range(max_iterations):
-            self.loss_record.append(self.compute_loss(X, y, lambda_, w0))
-            X_batch, y_batch = self.select_batch(X_train, y_train, k)
-            grad_w = self.compute_gradient(X_batch, y_batch, lambda_, w0)
-            w1 = w0 - learning_rate * grad_w
-            if np.sum((w1 - w0) ** 2) < stopping_epsilon:
-                break
-            else:
-                w0 = w1
-        return w0
+        percent = k / len(y)
+        number_class1 = floor(percent * len(y_train[self.target_value[0]]))
+        number_class2 = k - number_class1
+        assert number_class2 <= len(y_train[self.target_value[1]])
+        number_samples = {self.target_value[0]: number_class1, self.target_value[1]: number_class2}
+        return X_train, y_train, number_samples
 
-    def select_batch(self, X_train, y_train, k):
+    def select_batch(self, X_train, y_train, number_samples):
         X_batch = np.array([]).reshape(0, self.number_features)
         y_batch = np.array([])
         for one_class in self.target_value:
             n = len(y_train[one_class])
-            number_samples = np.floor(n * k / 100).astype(int)
+            k = number_samples[one_class]
             random_number = np.random.permutation(n)
-            random_idx = random_number[np.arange(number_samples)]
+            random_idx = random_number[np.arange(k)]
             X_batch = np.r_[X_batch, X_train[one_class][random_idx, :]]
             y_batch = np.r_[y_batch, y_train[one_class][random_idx]]
         return X_batch, y_batch
@@ -64,7 +72,6 @@ class SVMSoftplus(Classifier):
         gradient_w = np.zeros(self.number_features)
         for i in range(n):
             temp = np.exp((1 - y[i] * w.dot(X[i, :])) / self.softplus_a)
-            assert temp != 0
             gradient_w += 1 / (1 + temp) * temp * (-y[i] / self.softplus_a * X[i, :])
         gradient_w = gradient_w * self.softplus_a / n + 2 * lambda_ * w
         return gradient_w
@@ -102,7 +109,7 @@ class SVMSoftplus(Classifier):
 
 
 ##### test
-# mnist = genfromtxt('../data/MNIST-13.csv', delimiter=',')
+# mnist = np.genfromtxt('../data/MNIST-13.csv', delimiter=',')
 # mnist_data = mnist[:, 1:]
 # mnist_target = mnist[:, 0].astype(int)
 # model = SVMSoftplus(mnist_data, mnist_target, 10)
