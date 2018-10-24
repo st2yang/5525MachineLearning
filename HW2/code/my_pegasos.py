@@ -33,22 +33,16 @@ def myPegasos(filename, k, numruns):
 
     time_avg = np.mean(time_array)
     time_std = np.std(time_array, ddof=1)
-    with open("./tmp.txt", "w") as f:
-        for li in loss_list:
-            for val in li:
-                print(val, end=", ", file=f)
-            print(file=f)
     print('------')
     print('average runtime for ', numruns, ' runs with minibatch size of ', k, ':', round(time_avg, 3), 'seconds')
     print('SD of run time for ', numruns, ' runs with minibatch size of ', k, ':', round(time_std, 3), 'seconds')
-    print("plot data exported to ./tmp.txt")
 
 
 def main(argv=sys.argv):
     if len(argv) == 4:
         myPegasos(*argv[1:])
     else:
-        print('Usage: python3 ./svm_pegasos.py /path/to/dataset.csv k numruns', file=sys.stderr)
+        print('Usage: python3 ./my_pegasos.py /path/to/dataset.csv k numruns', file=sys.stderr)
         sys.exit(1)
 
 
