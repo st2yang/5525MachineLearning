@@ -1,11 +1,8 @@
 import numpy as np
 from classifier import Classifier
 from data_preprocessor import DataPreprocessor
-from numpy import genfromtxt
 from cvxopt import matrix
 from cvxopt.solvers import qp
-
-# training error rate 0.003
 
 
 class SVMCVX(Classifier):
@@ -20,6 +17,8 @@ class SVMCVX(Classifier):
         y[y == self.all_classes[1]] = self.target_value[1]
         self.number_features = X.shape[1]
         alpha = self.solve_dual_problem(X, y, regulator)
+        self.number_support_vectors = np.sum(alpha > 1e-10)
+        self.margin = 1 / np.linalg.norm(alpha)
         self.svm_weight, self.svm_bias = SVMCVX.compute_svm_parameters(alpha, X, y, regulator)
 
     def solve_dual_problem(self, X, y, c):
@@ -53,6 +52,12 @@ class SVMCVX(Classifier):
         b /= count
         return w, b
 
+    def predict(self, X_new):
+        X = self.data_preprocessor.process_data(X_new)
+        predicted_score = self.predict_score(X)
+        predicted_class = self.predict_class(predicted_score)
+        return predicted_class
+
     def validate(self, X_test, y_test):
         X_test = self.data_preprocessor.process_data(X_test)
         assert X_test.shape[1] == self.number_features
@@ -78,7 +83,7 @@ class SVMCVX(Classifier):
 
 
 ##### test
-# mnist = genfromtxt('../data/MNIST-13.csv', delimiter=',')
+# mnist = np.genfromtxt('../data/MNIST-13.csv', delimiter=',')
 # mnist_data = mnist[:, 1:]
 # mnist_target = mnist[:, 0].astype(int)
 # model = SVMCVX(mnist_data, mnist_target, 0.01)

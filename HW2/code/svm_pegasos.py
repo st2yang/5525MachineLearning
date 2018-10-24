@@ -25,12 +25,12 @@ class SVMPegasos(Classifier):
         X_train, y_train, number_samples = self.group_train_data(X, y, k)
         # optimization hyperparameters
         max_iterations = 1000
-        max_ktot = 10 * X.shape[0]
+        max_ktot = 100 * X.shape[0]
         ktot = 0
         for i in range(1, max_iterations):
             ktot += k
             self.loss_record.append(self.compute_loss(X, y, lambda_, w0))
-            X_batch, y_batch = self.select_batch(X_train, y_train, number_samples)
+            X_batch, y_batch = self.select_batch(X_train, y_train, number_samples, w0)
             w1 = self.update_weight(X_batch, y_batch, lambda_, w0, k, i)
             w0 = w1
             if ktot >= max_ktot:
@@ -51,7 +51,7 @@ class SVMPegasos(Classifier):
         number_samples = {self.target_value[0]: number_class1, self.target_value[1]: number_class2}
         return X_train, y_train, number_samples
 
-    def select_batch(self, X_train, y_train, number_samples):
+    def select_batch(self, X_train, y_train, number_samples, w):
         X_batch = np.array([]).reshape(0, self.number_features)
         y_batch = np.array([])
         for one_class in self.target_value:
@@ -61,7 +61,8 @@ class SVMPegasos(Classifier):
             random_idx = random_number[np.arange(k)]
             X_batch = np.r_[X_batch, X_train[one_class][random_idx, :]]
             y_batch = np.r_[y_batch, y_train[one_class][random_idx]]
-        return X_batch, y_batch
+        index = (np.dot(X_batch, w) * y_batch) < 1
+        return X_batch[index, :], y_batch[index]
 
     def update_weight(self, X, y, lambda_, w0, k, iter_t):
         # decay learning rate
@@ -78,6 +79,12 @@ class SVMPegasos(Classifier):
         tmp_loss = 1 - y * np.dot(X, w)
         loss = np.sum(tmp_loss[tmp_loss > 0]) / n + lambda_ / 2 * np.sum(w * w)
         return loss
+
+    def predict(self, X_new):
+        X = self.data_preprocessor.process_data(X_new)
+        predicted_score = self.predict_score(X)
+        predicted_class = self.predict_class(predicted_score)
+        return predicted_class
 
     def validate(self, X_test, y_test):
         X_test = self.data_preprocessor.process_data(X_test)

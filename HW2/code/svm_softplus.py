@@ -28,12 +28,12 @@ class SVMSoftplus(Classifier):
         # optimization hyperparameters
         max_iterations = 1000
         learning_rate = 0.01
-        max_ktot = 10 * X.shape[0]
+        max_ktot = 100 * X.shape[0]
         ktot = 0
         for i in range(max_iterations):
             ktot += k
             self.loss_record.append(self.compute_loss(X, y, lambda_, w0))
-            X_batch, y_batch = self.select_batch(X_train, y_train, number_samples)
+            X_batch, y_batch = self.select_batch(X_train, y_train, number_samples, w0)
             grad_w = self.compute_gradient(X_batch, y_batch, lambda_, w0)
             w1 = w0 - learning_rate * grad_w
             w0 = w1
@@ -55,7 +55,7 @@ class SVMSoftplus(Classifier):
         number_samples = {self.target_value[0]: number_class1, self.target_value[1]: number_class2}
         return X_train, y_train, number_samples
 
-    def select_batch(self, X_train, y_train, number_samples):
+    def select_batch(self, X_train, y_train, number_samples, w):
         X_batch = np.array([]).reshape(0, self.number_features)
         y_batch = np.array([])
         for one_class in self.target_value:
@@ -69,20 +69,22 @@ class SVMSoftplus(Classifier):
 
     def compute_gradient(self, X, y, lambda_, w):
         n = X.shape[0]
-        gradient_w = np.zeros(self.number_features)
-        for i in range(n):
-            temp = np.exp((1 - y[i] * w.dot(X[i, :])) / self.softplus_a)
-            gradient_w += 1 / (1 + temp) * temp * (-y[i] / self.softplus_a * X[i, :])
-        gradient_w = gradient_w * self.softplus_a / n + 2 * lambda_ * w
+        temp = np.exp((1 - y * X.dot(w)) / self.softplus_a)
+        gradient_w = (-1 / (1 + temp) * temp * y).dot(X)
+        gradient_w = gradient_w / n + 2 * lambda_ * w
         return gradient_w
 
     def compute_loss(self, X, y, lambda_, w):
         n = X.shape[0]
-        loss = 0
-        for i in range(n):
-            loss += np.log(1 + np.exp((1 - y[i] * w.dot(X[i, :])) / self.softplus_a))
+        loss = np.sum(np.log(1 + np.exp((1 - y * X.dot(w)) / self.softplus_a)))
         loss = loss * self.softplus_a / n + lambda_ * np.sum(w * w)
         return loss
+
+    def predict(self, X_new):
+        X = self.data_preprocessor.process_data(X_new)
+        predicted_score = self.predict_score(X)
+        predicted_class = self.predict_class(predicted_score)
+        return predicted_class
 
     def validate(self, X_test, y_test):
         X_test = self.data_preprocessor.process_data(X_test)

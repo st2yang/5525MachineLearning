@@ -16,6 +16,8 @@ def draw_loss(classifier_, axis, k):
         print('k={}, run {}/{}'.format(k, i+1, number_runs))
         model = classifier_(X, y, k)
         axis.plot(model.loss_record)
+        axis.set_xscale('log')
+        axis.set_yscale('log')
 
 
 def svm_test_batch_size(classifier_):
@@ -39,7 +41,7 @@ def svm_test_batch_size(classifier_):
 def main():
     seed(5525)
     np.random.seed(5525)
-    svm_test_batch_size(SVMPegasos)
+    # svm_test_batch_size(SVMPegasos)
     svm_test_batch_size(SVMSoftplus)
 
 
