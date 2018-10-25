@@ -82,6 +82,7 @@ class SVMPegasos(Classifier):
 
     def predict(self, X_new):
         X = self.data_preprocessor.process_data(X_new)
+        X = np.reshape(X, (-1, self.number_features))
         predicted_score = self.predict_score(X)
         predicted_class = self.predict_class(predicted_score)
         return predicted_class
