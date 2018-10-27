@@ -4,8 +4,6 @@ import sys
 import time
 from os.path import isfile
 
-# run time too long...
-
 
 def read_file(filename):
     assert isfile(filename)

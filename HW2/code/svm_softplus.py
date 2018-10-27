@@ -26,7 +26,7 @@ class SVMSoftplus(Classifier):
     def optimization(self, X, y, lambda_, w0, k):
         X_train, y_train, number_samples = self.group_train_data(X, y, k)
         # optimization hyperparameters
-        max_iterations = 1000
+        max_iterations = 10000
         learning_rate = 0.01
         max_ktot = 100 * X.shape[0]
         ktot = 0

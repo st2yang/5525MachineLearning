@@ -18,13 +18,14 @@ class SVMPegasos(Classifier):
         # prepare for optimization
         self.loss_record = []
         penalty_lambda = 1
-        w_init = np.random.normal(0, 0.001, self.number_features)
+        w_init = np.zeros(self.number_features)
+        w_init.fill(np.sqrt(1 / (self.number_features * penalty_lambda)))
         self.svm_weight = self.pegas(X, y, penalty_lambda, w_init, sgd_batch_size)
 
     def pegas(self, X, y, lambda_, w0, k):
         X_train, y_train, number_samples = self.group_train_data(X, y, k)
         # optimization hyperparameters
-        max_iterations = 1000
+        max_iterations = 10000
         max_ktot = 100 * X.shape[0]
         ktot = 0
         for i in range(1, max_iterations):

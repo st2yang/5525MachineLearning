@@ -19,6 +19,7 @@ def draw_loss(classifier_, axis, k):
         axis.set_xscale('log')
         axis.set_yscale('log')
         axis.set_ylim([0.08, 1])
+        axis.set_xlim([1, 1e4])
 
 
 def svm_test_batch_size(classifier_):
