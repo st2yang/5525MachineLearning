@@ -26,7 +26,7 @@ def myPegasos(filename, k, numruns):
     for i in range(numruns):
         print('run ', i + 1, "/", numruns, ", please wait...", end="\r")
         begin = time.time()
-        model = SVMPegasos(X, y, 10)
+        model = SVMPegasos(X, y, k)
         loss_list.append(model.loss_record)
         end = time.time()
         time_array[i] = end - begin
