@@ -97,7 +97,7 @@ class AdaBoost(object):
             # evaluate quantities
             epsilon_m = error_m / np.sum(w_m)
             self.alpha[m] = 0.5 * np.log((1 - epsilon_m) / epsilon_m)
-            if __debug__:
+            if not __debug__:
                 print('stage: {}/{}'.format(m, M))
                 print('weight: ', self.alpha[m])
                 print('prediction result y*f(): ', y * self.predict(X))
