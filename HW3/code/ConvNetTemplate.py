@@ -152,14 +152,27 @@ with tf.name_scope('loss'):
 # don't forgot to pass in global_step
 
 # TO DO
-optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(loss,
+with tf.name_scope('Optimizer'):
+    optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(loss,
                                                            global_step=global_step)
+# test the model
+with tf.name_scope("Output"):
+    preds = tf.nn.softmax(logits)
+    correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_preds, tf.float32))
+
+# Create a summary to monitor loss
+tf.summary.scalar("accuracy", accuracy)
+tf.summary.scalar("loss", loss)
+
+# merge summaries per collection
+training_summary = tf.summary.merge_all()
 
 with tf.Session() as sess:
+    writer_train = tf.summary.FileWriter('./graphs/CNN', sess.graph)
+
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
-    # to visualize using TensorBoard
-    writer = tf.summary.FileWriter('./graph/CNN', sess.graph)
     # You have to create folders to store checkpoints
     ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/convnet_mnist/checkpoint'))
     # if that checkpoint exists, restore from checkpoint
@@ -174,8 +187,9 @@ with tf.Session() as sess:
     total_loss = 0.0
     for index in range(initial_step, n_batches * N_EPOCHS):  # train the model n_epochs times
         X_batch, Y_batch = mnist.train.next_batch(BATCH_SIZE)
-        _, loss_batch = sess.run([optimizer, loss],
-                                 feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+        _, loss_batch, train_summ = sess.run([optimizer, loss, training_summary],
+                                             feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
+        writer_train.add_summary(train_summ, index)
         total_loss += loss_batch
         if (index + 1) % SKIP_STEP == 0:
             print('Average loss at step {}: {:5.1f}'.format(index + 1, total_loss / SKIP_STEP))
@@ -185,16 +199,7 @@ with tf.Session() as sess:
     print("Optimization Finished!")  # should be around 0.35 after 25 epochs
     print("Total time: {0} seconds".format(time.time() - start_time))
 
-    # test the model
-    n_batches = int(mnist.test.num_examples / BATCH_SIZE)
-    total_correct_preds = 0
-    for i in range(n_batches):
-        X_batch, Y_batch = mnist.test.next_batch(BATCH_SIZE)
-        _, loss_batch, logits_batch = sess.run([optimizer, loss, logits],
-                                               feed_dict={X: X_batch, Y: Y_batch, dropout: DROPOUT})
-        preds = tf.nn.softmax(logits_batch)
-        correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch, 1))
-        accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
-        total_correct_preds += sess.run(accuracy)
-
-    print("Accuracy {0}".format(total_correct_preds / mnist.test.num_examples))
+    # Test model calculate accuracy
+    print('Accuracy on test data:', accuracy.eval(
+        {X: mnist.test.images, Y: mnist.test.labels, dropout: 1.0}))
+    print('Run the command line: tensorboard --logdir=./graphs/CNN')

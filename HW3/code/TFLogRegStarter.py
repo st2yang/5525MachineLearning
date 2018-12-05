@@ -13,7 +13,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 learning_rate = 0.01
 batch_size = 128
 n_epochs = 25
-log_step = 2
 
 # Step 1: Read in data
 # using TF Learn's built in function to load MNIST data to the folder data/mnist
@@ -32,7 +31,7 @@ with tf.name_scope("Input"):
 # weights and biases are initialized to 0
 # shape of w depends on the dimension of X and Y so that Y = X * w + b
 # shape of b depends on Y
-with tf.name_scope("trainable"):
+with tf.name_scope("Trainable"):
     w = tf.Variable(tf.zeros([784, 10]))
     b = tf.Variable(tf.zeros([10]))
 
@@ -56,14 +55,14 @@ with tf.name_scope("Loss"):
 
 # Step 6: define training op
 # using gradient descent to minimize loss
-with tf.name_scope("SDG"):
+with tf.name_scope("Optimizer"):
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
 
 # test the model
-with tf.name_scope("test"):
+with tf.name_scope("Output"):
     preds = tf.nn.softmax(logits)
     correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1))
-    accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
+    accuracy = tf.reduce_mean(tf.cast(correct_preds, tf.float32))
 
 # Create a summary to monitor loss
 tf.summary.scalar("accuracy", accuracy)
@@ -73,39 +72,25 @@ tf.summary.scalar("loss", loss)
 training_summary = tf.summary.merge_all()
 
 with tf.Session() as sess:
-    writer_train = tf.summary.FileWriter('./graphs/logistic/train', sess.graph)
+    writer_train = tf.summary.FileWriter('./graphs/logistic', sess.graph)
 
     start_time = time.time()
     sess.run(tf.global_variables_initializer())
     n_batches = int(mnist.train.num_examples / batch_size)
-    for i in range(n_epochs):  # train the model n_epochs times
+    for epoch in range(n_epochs):  # train the model n_epochs times
         total_loss = 0
 
-        for _ in range(n_batches):
+        for i in range(n_batches):
             X_batch, Y_batch = mnist.train.next_batch(batch_size)
-            _, loss_batch = sess.run([optimizer, loss],
-                                     feed_dict={X: X_batch, Y: Y_batch})
+            _, loss_batch, train_summ = sess.run([optimizer, loss, training_summary],
+                                                 feed_dict={X: X_batch, Y: Y_batch})
+            writer_train.add_summary(train_summ, epoch * n_batches + i)
             total_loss += loss_batch
-        print('Average loss epoch {0}: {1}'.format(i, total_loss / n_batches))
-
-        if i % log_step == 0:
-            # To log training accuracy.
-            train_summ = sess.run(training_summary,
-                                  feed_dict={
-                                  X: mnist.train.images,
-                                  Y: mnist.train.labels})
-            writer_train.add_summary(train_summ, i)
-
-    print('Total time: {0} seconds'.format(time.time() - start_time))
+        print('Average loss epoch {0}: {1}'.format(epoch, total_loss / n_batches))
 
     print('Optimization Finished!')  # should be around 0.35 after 25 epochs
+    print('Total time: {0} seconds'.format(time.time() - start_time))
 
-    total_correct_preds = 0
-    n_batches = int(mnist.test.num_examples / batch_size)
-
-    for i in range(n_batches):
-        X_batch, Y_batch = mnist.test.next_batch(batch_size)
-        accuracy_batch = sess.run(accuracy, feed_dict={X: X_batch, Y: Y_batch})
-        total_correct_preds += accuracy_batch
-
-    print('Accuracy {0}'.format(total_correct_preds / mnist.test.num_examples))
+    # Test model calculate accuracy
+    print('Accuracy on test data:', accuracy.eval({X: mnist.test.images, Y: mnist.test.labels}))
+    print('Run the command line: tensorboard --logdir=./graphs/logistic')
