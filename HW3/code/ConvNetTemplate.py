@@ -24,7 +24,7 @@ LEARNING_RATE = 0.001
 BATCH_SIZE = 128
 SKIP_STEP = 10
 DROPOUT = 0.75
-N_EPOCHS = 1
+N_EPOCHS = 5
 
 # Step 3: create placeholders for features and labels
 # each image in the MNIST data is of shape 28*28 = 784
@@ -32,19 +32,18 @@ N_EPOCHS = 1
 # We'll be doing dropout for hidden layer so we'll need a placeholder
 # for the dropout probability too
 # Use None for shape so we can change the batch_size once we've built the graph
-with tf.name_scope('data'):
+with tf.name_scope('Data'):
     X = tf.placeholder(tf.float32, [None, 784], name="X_placeholder")
     Y = tf.placeholder(tf.float32, [None, 10], name="Y_placeholder")
 
 dropout = tf.placeholder(tf.float32, name='dropout')
+global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
 
 # Step 4 + 5: create weights + do inference
 # the model is conv -> relu -> pool -> conv -> relu -> pool -> fully connected -> softmax
 
-global_step = tf.Variable(0, dtype=tf.int32, trainable=False, name='global_step')
-
 utils.make_dir('checkpoints')
-utils.make_dir('checkpoints/convnet_mnist')
+utils.make_dir('checkpoints/CNN')
 
 with tf.variable_scope('conv1') as scope:
     # first, reshape the image to [BATCH_SIZE, 28, 28, 1] to make it work with tf.nn.conv2d
@@ -140,7 +139,7 @@ with tf.variable_scope('softmax_linear') as scope:
 # Step 6: define loss function
 # use softmax cross entropy with logits as the loss function
 # compute mean cross entropy, softmax is applied internally
-with tf.name_scope('loss'):
+with tf.name_scope('Loss'):
     # you should know how to do this too
 
     # TO DO
@@ -153,8 +152,8 @@ with tf.name_scope('loss'):
 
 # TO DO
 with tf.name_scope('Optimizer'):
-    optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(loss,
-                                                           global_step=global_step)
+    optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(loss, global_step=global_step)
+
 # test the model
 with tf.name_scope("Output"):
     preds = tf.nn.softmax(logits)
@@ -174,7 +173,7 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     saver = tf.train.Saver()
     # You have to create folders to store checkpoints
-    ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/convnet_mnist/checkpoint'))
+    ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/CNN/'))
     # if that checkpoint exists, restore from checkpoint
     if ckpt and ckpt.model_checkpoint_path:
         saver.restore(sess, ckpt.model_checkpoint_path)
@@ -192,9 +191,9 @@ with tf.Session() as sess:
         writer_train.add_summary(train_summ, index)
         total_loss += loss_batch
         if (index + 1) % SKIP_STEP == 0:
-            print('Average loss at step {}: {:5.1f}'.format(index + 1, total_loss / SKIP_STEP))
+            print('Average loss at step {}: {}'.format(index + 1, total_loss / SKIP_STEP))
             total_loss = 0.0
-            saver.save(sess, 'checkpoints/convnet_mnist/mnist-convnet', index)
+            saver.save(sess, 'checkpoints/CNN/', index + 1)
 
     print("Optimization Finished!")  # should be around 0.35 after 25 epochs
     print("Total time: {0} seconds".format(time.time() - start_time))
