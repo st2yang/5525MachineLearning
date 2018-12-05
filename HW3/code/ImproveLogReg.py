@@ -62,8 +62,8 @@ with tf.name_scope("Loss"):
 with tf.name_scope("Optimizer"):
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
-# test the model
-with tf.name_scope("Output"):
+# evaluate the model
+with tf.name_scope("Evaluation"):
     preds = tf.nn.softmax(logits)
     correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_preds, tf.float32))
