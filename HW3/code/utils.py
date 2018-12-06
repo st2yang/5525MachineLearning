@@ -22,6 +22,3 @@ def make_dir(path):
         os.mkdir(path)
     except OSError:
         pass
-
-
-

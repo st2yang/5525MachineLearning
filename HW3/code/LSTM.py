@@ -104,3 +104,4 @@ with tf.Session() as sess:
     test_data = mnist.test.images.reshape((-1, timesteps, num_input))
     test_label = mnist.test.labels
     print("Testing Accuracy:", sess.run(accuracy, feed_dict={X: test_data, Y: test_label}))
+    print('Run the command line: tensorboard --logdir=./graphs/LSTM')

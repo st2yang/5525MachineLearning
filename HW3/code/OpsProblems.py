@@ -5,9 +5,6 @@ You should thoroughly test your code
 
 import tensorflow as tf
 
-print("Setting Eager mode...")
-tf.enable_eager_execution()
-
 ###############################################################################
 # 1a: Create two random 0-d tensors x and y that are Gaussian distributed, zero mean unit variance.
 # Create a TensorFlow object that returns x + y if x > y, and x - y otherwise.
@@ -71,7 +68,7 @@ out = tf.gather(x, indices)
 ###############################################################################
 
 # YOUR CODE
-out = tf.diag(tf.range(6) + 1)
+out = tf.diag(tf.range(1, 7))
 
 ###############################################################################
 # 1f: Create a random 2-d tensor of size 10 x 10 from any distribution.
